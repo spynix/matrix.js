@@ -61,26 +61,76 @@ function Matrix2d(m, n, debug) {
 }
 
 
-Matrix2d.prototype.copy = function(source) {
-  if (!(source instanceof Matrix2d)) {
+/* update():
+ *   update will simply try to change the data stored in the matrix while
+ *   complying with the matrix's current dimensions.  again, data can be either
+ *   a 1 or 2 dimensional array
+ */
+Matrix2d.prototype.update = function(data) {
+  var temp = [];
+  var i, j, k, l, type;
+  
+  if (Object.prototype.toString.call(data) !== "[object Array]") {
     if (this.debug)
-      console.log("Matrix2d->copy(): source material not a Matrix2d instance");
+      console.log("Matrix2d->update(): input not an array");
+      
+    return false;
+  }
+  
+  type = Object.prototype.toString.call(data[0]);
+  
+  if (type === "[object Array]") { /* first element array? so we assume 2d array */
+    if (data.length != this.num_rows) {
+      if (this.debug)
+        console.log("Matrix2d->update(): 2d input expected (" + this.num_rows.toString() + ") rows -- (found " + data.length.toString() + " rows)");
+      
+      return false;
+    }
+    
+    for (i = 0, j = data.length; i < j; i++) {
+      if (data[i].length != this.num_columns) {
+        if (this.debug)
+          console.log("Matrix2d->update(): 2d input expected (" + this.num_rows.toString() + ") columns -- (found " + data[i].length.toString() + " at row " + i.toString() + ")");
+
+        return false;
+      }
+      
+      for (k = 0, l = data[i].length; k < l; k++)
+        temp.push(data[i][k]);
+    }
+    
+    if (temp.length != (this.num_rows * this.num_columns)) {
+      if (this.debug)
+        console.log("Matrix2d->update(): 2d data successfully handled yet did not result in the correct number of total elements");
+      
+      return false;
+    }
+  } else if (type === "[object Number]") { /* first element number? so we assume 1d array */
+    if ((l = data.length) != (this.num_rows * this.num_columns)) {
+      if (this.debug)
+        console.log("Matrix2d->update(): 1d data expected (" + (this.num_rows * this.num_columns).toString() + "elements -- (found " + l.toString() + ")");
+      
+      return false;
+    }
+    
+    for (i = 0; i < l; i++)
+      temp.push(data[i]);
+    
+    if (temp.length != (this.num_rows * this.num_columns)) {
+      if (this.debug)
+        console.log("Matrix2d->update(): 1d data successfully handled yet did not result in the correct number of total elements");
+      
+      return false;
+    }
+  } else { /* first element something else?  you fucked up */
+    if (this.debug)
+      console.log("Matrix2d->update(): input expected Array or Number -- (found " + type + ")");
     
     return false;
   }
   
-  this.num_rows = source.num_rows;
-  this.num_columns = source.num_columns;
-  this.matrix = source.matrix;
-};
-
-
-Matrix2d.prototype.clone = function() {
-  var clone = new Matrix2d(this.num_rows, this.num_columns);
-  
-  clone.update(this.matrix);
-  
-  return clone;
+  /* our validation is successful at this point, so assign it */
+  this.matrix = temp;
 };
 
 
@@ -268,12 +318,7 @@ Matrix2d.prototype.set_element = function(row, column, data) {
       console.log("Matrix2d->set_element(): input undefined");
     
     return false;
-  } else if (typeof data !== "number") {
-    if (this.debug)
-      console.log("Matrix2d->set_element(): input not a number -- (received " + data.toString() + ")");
-    
-    return false;
-  }
+  } 
   
   if ((row < 0) || (row > (this.num_rows - 1)) || (column < 0) || (column > this.num_columns - 1)) {
     if (this.debug)
@@ -406,7 +451,7 @@ Matrix2d.prototype.get_element = function(row, column) {
 
 
 /* add():
- *   adds this matrix with the input
+ *   adds left operand [this] with right operand [input]
  */
 Matrix2d.prototype.add = function(right, assign) {
   var matrix = [];
@@ -428,7 +473,7 @@ Matrix2d.prototype.add = function(right, assign) {
   
   for (i = 0; i < this.num_rows; i++)
     for (j = 0; j < this.num_columns; j++)
-      matrix[(i * this.num_columns) + j] = this.matrix[(i * this.num_columns) + j] + right.matrix[(i * this.num_columns) + j];
+      matrix[(i * this.num_columns) + j] += right.matrix[(i * this.num_columns) + j];
   
   if (assign === undefined)
     assign = true; /* if unknown, default action is to assign */
@@ -467,6 +512,91 @@ Matrix2d.prototype.scalar_add = function(scalar) {
 };
 
 
+/* subtract():
+ *   subtracts the right operand [input] from the left operand [this]
+ */
+Matrix2d.prototype.subtract = function(right, assign) {
+  var matrix = [];
+  var i, j, temp;
+  
+  if (!(right instanceof Matrix2d)) {
+    if (this.debug)
+      console.log("Matrix2d->subtract(): right operand [input] is not a Matrix2d instance");
+    
+    return false;
+  }
+  
+  if ((this.num_rows != right.num_rows) || (this.num_columns != right.num_columns)) {
+    if (this.debug)
+      console.log("Matrix2d->subtract(): size mismatch; left operand [this] (" + this.num_rows.toString() + ", " + this.num_columns.toString() + ") -- right operand [input] (" + right.num_rows.toString() + ", " + right.num_columns.toString() + ")");
+    
+    return false;
+  }
+  
+  for (i = 0; i < this.num_rows; i++)
+    for (j = 0; j < this.num_columns; j++)
+      matrix[(i * this.num_columns) + j] -= right.matrix[(i * this.num_columns) + j];
+  
+  if (assign === undefined)
+    assign = true; /* if unknown, default action is to assign */
+  
+  if (assign) {
+    this.matrix = temp;
+  } else {
+    temp = new Matrix2d(this.num_columns, this.num_rows, this.debug);
+    temp.update(matrix);
+    
+    return temp;
+  }
+  
+  return true;
+};
+
+
+/* scalar_subtract():
+ *   multiplies each element by the scalar
+ */
+Matrix2d.prototype.scalar_subtract = function(scalar) {
+  var i, j;
+  
+  if (typeof scalar !== "number") {
+    if (this.debug)
+      console.log("Matrix2d->scalar_subtract(): input scalar is not a number");
+    
+    return false;
+  }
+  
+  for (i = 0; i < this.num_rows; i++)
+    for (j = 0; j < this.num_columns; j++)
+      this.matrix[(i * this.num_columns) + j] -= scalar;
+  
+  return true;
+};
+
+
+/* multiply():
+ *   multiplies two matrices
+ */
+Matrix2d.prototype.multiply = function(right, assign) {
+  var matrix = [];
+  var i, j, temp;
+  
+  if (!(right instanceof Matrix2d)) {
+    if (this.debug)
+      console.log("Matrix2d->multiply(): right operand [input] is not a Matrix2d instance");
+    
+    return false;
+  }
+  
+  if (this.num_columns != right.num_rows) {
+    if (this.debug)
+      console.log("Matrix2d->multiply(): size mismatch; left operand [this] (" + this.num_rows.toString() + ", " + this.num_columns.toString() + ") -- right operand [input] (" + right.num_rows.toString() + ", " + right.num_columns.toString() + ")");
+    
+    return false;
+  }
+};
+
+
 /* scalar_multiply():
  *   multiplies each element by the scalar
  */
@@ -483,6 +613,27 @@ Matrix2d.prototype.scalar_multiply = function(scalar) {
   for (i = 0; i < this.num_rows; i++)
     for (j = 0; j < this.num_columns; j++)
       this.matrix[(i * this.num_columns) + j] *= scalar;
+  
+  return true;
+};
+
+
+/* scalar_divide():
+ *   divide each element by scalar
+ */
+Matrix2d.prototype.scalar_divide = function(scalar) {
+  var i, j;
+  
+  if (typeof scalar !== "number") {
+    if (this.debug)
+      console.log("Matrix2d->scalar_divide(): input scalar is not a number");
+    
+    return false;
+  }
+  
+  for (i = 0; i < this.num_rows; i++)
+    for (j = 0; j < this.num_columns; j++)
+      this.matrix[(i * this.num_columns) + j] /= scalar;
   
   return true;
 };
@@ -578,79 +729,252 @@ Matrix2d.prototype.rotate = function(direction, assign) {
 };
 
 
-/* update():
- *   update will simply try to change the data stored in the matrix while
- *   complying with the matrix's current dimensions.  again, data can be either
- *   a 1 or 2 dimensional array
+/* copy():
+ *   sets this matrix's data to the source's values
  */
-Matrix2d.prototype.update = function(data) {
-  var temp = [];
-  var i, j, k, l, type;
-  
-  if (Object.prototype.toString.call(data) !== "[object Array]") {
+Matrix2d.prototype.copy = function(source) {
+  if (!(source instanceof Matrix2d)) {
     if (this.debug)
-      console.log("Matrix2d->update(): input not an array");
-      
-    return false;
-  }
-  
-  type = Object.prototype.toString.call(data[0]);
-  
-  if (type === "[object Array]") { /* first element array? so we assume 2d array */
-    if (data.length != this.num_rows) {
-      if (this.debug)
-        console.log("Matrix2d->update(): 2d input expected (" + this.num_rows.toString() + ") rows -- (found " + data.length.toString() + " rows)");
-      
-      return false;
-    }
-    
-    for (i = 0, j = data.length; i < j; i++) {
-      if (data[i].length != this.num_columns) {
-        if (this.debug)
-          console.log("Matrix2d->update(): 2d input expected (" + this.num_rows.toString() + ") columns -- (found " + data[i].length.toString() + " at row " + i.toString() + ")");
-
-        return false;
-      }
-      
-      for (k = 0, l = data[i].length; k < l; k++)
-        temp.push(data[i][k]);
-    }
-    
-    if (temp.length != (this.num_rows * this.num_columns)) {
-      if (this.debug)
-        console.log("Matrix2d->update(): 2d data successfully handled yet did not result in the correct number of total elements");
-      
-      return false;
-    }
-  } else if (type === "[object Number]") { /* first element number? so we assume 1d array */
-    if ((l = data.length) != (this.num_rows * this.num_columns)) {
-      if (this.debug)
-        console.log("Matrix2d->update(): 1d data expected (" + (this.num_rows * this.num_columns).toString() + "elements -- (found " + l.toString() + ")");
-      
-      return false;
-    }
-    
-    for (i = 0; i < l; i++)
-      temp.push(data[i]);
-    
-    if (temp.length != (this.num_rows * this.num_columns)) {
-      if (this.debug)
-        console.log("Matrix2d->update(): 1d data successfully handled yet did not result in the correct number of total elements");
-      
-      return false;
-    }
-  } else { /* first element something else?  you fucked up */
-    if (this.debug)
-      console.log("Matrix2d->update(): input expected Array or Number -- (found " + type + ")");
+      console.log("Matrix2d->copy(): source material not a Matrix2d instance");
     
     return false;
   }
   
-  /* our validation is successful at this point, so assign it */
-  this.matrix = temp;
+  this.num_rows = source.num_rows;
+  this.num_columns = source.num_columns;
+  this.matrix = source.matrix;
 };
 
 
+/* clone():
+ *   creates and returns a new Matrix2d with this matrix's values
+ */
+Matrix2d.prototype.clone = function() {
+  var clone = new Matrix2d(this.num_rows, this.num_columns);
+  
+  clone.update(this.matrix);
+  
+  return clone;
+};
+
+
+/* contains():
+ *   determines if the matrix contains a particular value
+ *   
+ *   use this if you simply want to know if a value exists in the matrix
+ */
+Matrix2d.prototype.contains = function(value) {
+  var i, j;
+  
+  if (value === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->contains(): undefined value");
+    
+    return false;
+  }
+  
+  for (i = 0; i < this.num_rows; i++)
+    for (j = 0; j < this.num_columns; j++)
+      if (this.matrix[(i * this.num_columns) + j] == value)
+        return true;
+  
+  return false;
+};
+
+
+/* row_contains():
+ * 
+ */
+Matrix2d.prototype.row_contains = function(index, value) {
+  var i, j;
+  
+  if (value === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->row_contains(): undefined value");
+    
+    return false;
+  } else if (index === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->row_contains(): value undefined");
+    
+    return false;
+  }
+  
+  if ((index < 0) || (index >= this.num_rows)) {
+    if (this.debug)
+      console.log("Matrix2d->row_contains(): index out of range; expected (0 - " + (this.num_rows - 1).toString() + ") -- received (" + index.toString() + ")");
+    
+    return false;
+  }
+  
+  for (i = (index * this.num_columns), j = ((index + 1) * this.num_columns); i < j; i++)
+    if (this.matrix[i] == value)
+      return true;
+  
+  return false;
+};
+
+
+/* column_contains():
+ * 
+ */
+Matrix2d.prototype.column_contains = function(index, value) {
+  var i, j;
+  
+  if (value === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->column_contains(): undefined value");
+    
+    return false;
+  } else if (index === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->row_contains(): value undefined");
+    
+    return false;
+  }
+  
+  if ((index < 0) || (index >= this.num_columns)) {
+    if (this.debug)
+      console.log("Matrix2d->column_contains(): index out of range; expected (0 - " + (this.num_columns - 1).toString() + ") -- received (" + index.toString() + ")");
+    
+    return false;
+  }
+  
+  for (i = index, j = (this.num_rows * this.num_columns); i < j; i += this.num_columns)
+    if (this.matrix[i] == value)
+      return true;
+  
+  return false;
+};
+
+
+/* find():
+ *   finds and returns index pairs (row, column) for a particular value
+ *   
+ *   use this if you want to know if a value exists, and if it does where
+ *   
+ *   also, having a default dimensionality of 2 seems to make more sense to me
+ *   when you consider something like this:
+ *   
+ *     if ((pairs = m.find(value)) != false)
+ *       for (i = 0, l = pairs.length; i < l; i++)
+ *         m.set_element((pairs[i])[0], (pairs[i])[1], newvalue);
+ */
+Matrix2d.prototype.find = function(value, dimension) {
+  var i, j;
+  var pairs = [];
+  
+  if (value === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->find(): undefined value");
+    
+    return false;
+  }
+  
+  if ((dimension != 1) && (dimension != 2))
+    dimension = 2;
+  
+  for (i = 0; i < this.num_rows; i++) {
+    for (j = 0; j < this.num_columns; j++) {
+      if (this.matrix[(i * this.num_columns) + j] == value) {
+        if (dimension == 1)
+          pairs.push([(i * this.num_columns), j]);
+        else if (dimension == 2)
+          pairs.push([i, j]);
+        else {
+          if (this.debug)
+            console.log("Matrix2d->find(): invalid dimensionality");
+          
+          return false;
+        }
+      }
+    }
+  }
+        
+  if (pairs.length >= 1)
+    return pairs;
+  
+  return false;
+};
+
+
+/* row_find():
+ * 
+ */
+Matrix2d.prototype.row_find = function(index, value) {
+  var i, j;
+  var indices = [];
+  
+  if (value === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->row_find(): undefined value");
+    
+    return false;
+  } else if (index === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->row_find(): value undefined");
+    
+    return false;
+  }
+  
+  if ((index < 0) || (index >= this.num_rows)) {
+    if (this.debug)
+      console.log("Matrix2d->row_find(): index out of range; expected (0 - " + (this.num_rows - 1).toString() + ") -- received (" + index.toString() + ")");
+    
+    return false;
+  }
+  
+  for (i = (index * this.num_columns), j = ((index + 1) * this.num_columns); i < j; i++)
+    if (this.matrix[i] == value)
+      indices.push(i);
+  
+  if (indices.length >= 1)
+    return indices;
+  
+  return false;
+};
+
+
+/* column_find():
+ * 
+ */
+Matrix2d.prototype.column_find = function(index, value) {
+  var i, j;
+  var indices = [];
+  
+  if (value === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->column_find(): undefined value");
+    
+    return false;
+  } else if (index === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->column_find(): value undefined");
+    
+    return false;
+  }
+  
+  if ((index < 0) || (index >= this.num_rows)) {
+    if (this.debug)
+      console.log("Matrix2d->column_find(): index out of range; expected (0 - " + (this.num_columns - 1).toString() + ") -- received (" + index.toString() + ")");
+    
+    return false;
+  }
+  
+  for (i = index, j = (this.num_rows * this.num_columns); i < j; i += this.num_columns)
+    if (this.matrix[i] == value)
+      indices.push(i);
+  
+  if (indices.length >= 1)
+    return indices;
+  
+  return false;
+};
+
+
+/* toString():
+ *   returns a string representing the current matrix
+ */
 Matrix2d.prototype.toString = function() {
   var i, j;
   var buf = "";
