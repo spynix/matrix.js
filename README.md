@@ -92,7 +92,6 @@ matrix, at which point I'll write it.
 - multiply((`Matrix2d`) `right`)
 - product((`Matrix2d`) `right`) -- alias to multiply
 - divide((`Matrix2d`) `right`)
-  
 - scalar_add((`number`) `scalar`)
 - scalar_subtract((`number`) `scalar`)
 - scalar_multiply((`number`) `scalar`)
