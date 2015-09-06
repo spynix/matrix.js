@@ -50,7 +50,7 @@
 function Matrix2d(m, n, debug) {
   var i, j;
   
-  this.debug = ((debug == undefined) ? false : debug);
+  this.debug = ((debug === undefined) ? false : debug);
   this.matrix = [];
   this.num_rows = ((m <= 0) ? 1 : m);
   this.num_columns = ((n <= 0) ? 1 : n);
@@ -170,6 +170,124 @@ Matrix2d.prototype.set = function(m, n, data) {
 };
 
 
+/* set_row():
+ *   set a row's data 
+ */
+Matrix2d.prototype.set_row = function(index, data) {
+  var i, j, k, l;
+  
+  if (index === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->set_row(): row parameter was undefined");
+    
+    return false;
+  }
+  
+  if ((index >= this.num_rows) || (index < 0)) {
+    if (this.debug)
+      console.log("Matrix2d->set_row(): expected range of (0 - " + (this.num_rows - 1).toString() + ") -- (received " + index.toString() + ")");
+    
+    return false;
+  }
+  
+  if (Object.prototype.toString.call(data) !== "[object Array]") {
+    if (this.debug)
+      console.log("Matrix2d->set_row(): input not an array");
+      
+    return false;
+  }
+  
+  if (data.length != this.num_columns) {
+    if (this.debug)
+      console.log("Matrix2d->set_row(): input array not correct size (expected " + this.num_columns.toString() + ") -- (received " + data.length.toString() + ")");
+    
+    return false;
+  }
+  
+  for (i = (index * this.num_columns), j = ((index + 1) * this.num_columns), k = 0, l = data.length; (i < j) && (k < l); i++, k++)
+    this.matrix[i] = data[k];
+  
+  return true;
+};
+
+
+/* set_column():
+ *   set a row's data 
+ */
+Matrix2d.prototype.set_column = function(index, data) {
+  var i, j, k, l;
+  
+  if (index === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->set_column(): row parameter was undefined");
+    
+    return false;
+  }
+  
+  if ((index >= this.num_columns) || (index < 0)) {
+    if (this.debug)
+      console.log("Matrix2d->set_column(): expected range of (0 - " + (this.num_columns - 1).toString() + ") -- (received " + index.toString() + ")");
+    
+    return false;
+  }
+  
+  if (Object.prototype.toString.call(data) !== "[object Array]") {
+    if (this.debug)
+      console.log("Matrix2d->set_column(): input not an array");
+      
+    return false;
+  }
+  
+  if (data.length != this.num_rows) {
+    if (this.debug)
+      console.log("Matrix2d->set_column(): input array not correct size (expected " + this.num_rows.toString() + ") -- (received " + data.length.toString() + ")");
+    
+    return false;
+  }
+  
+  for (i = index, j = (this.num_rows * this.num_columns), k = 0, l = data.length; (i < j) && (k < l); i += this.num_columns, k++)
+    this.matrix[i] = data[k];
+  
+  return true;
+};
+
+
+/* set_element():
+ *   sets the element at row x column
+ */
+Matrix2d.prototype.set_element = function(row, column, data) {
+  if ((row === undefined) || (column === undefined)) {
+    if (this.debug)
+      console.log("Matrix2d->set_element(): row(" + row.toString() + "), column(" + column.toString() + ")");
+    
+    return false;
+  }
+  
+  if (data === undefined) {
+    if (this.debug)
+      console.log("Matrix2d->set_element(): input undefined");
+    
+    return false;
+  } else if (typeof data !== "number") {
+    if (this.debug)
+      console.log("Matrix2d->set_element(): input not a number -- (received " + data.toString() + ")");
+    
+    return false;
+  }
+  
+  if ((row < 0) || (row > (this.num_rows - 1)) || (column < 0) || (column > this.num_columns - 1)) {
+    if (this.debug)
+      console.log("Matrix2d->set_element(): index out of range; expected ((0 - " + (this.num_rows - 1).toString() + "), (0 - " + (this.num_columns - 1).toString() + ") -- received (" + row.toString() + ", " + column.toString() + ")");
+    
+    return false;
+  }
+  
+  this.matrix[(row * this.num_columns) + column] = data;
+  
+  return true;
+};
+
+
 /* get():
  *   retrieve the data stored in the matrix
  *   
@@ -181,7 +299,7 @@ Matrix2d.prototype.get = function(dimension) {
   var i, j, row;
   var rows = [];
   
-  if (dimension == undefined)
+  if (dimension === undefined)
     dimension = 1;
   
   if (dimension == 1) {
@@ -215,7 +333,7 @@ Matrix2d.prototype.get_row = function(index) {
   var i, j;
   var temp = [];
   
-  if (index == undefined) {
+  if (index === undefined) {
     if (this.debug)
       console.log("Matrix2d->get_row(): row parameter was undefined");
     
@@ -236,11 +354,15 @@ Matrix2d.prototype.get_row = function(index) {
 };
 
 
+/* get_column():
+ *   retrieve the specified column by index
+ * 
+ */
 Matrix2d.prototype.get_column = function(index) {
   var i, j;
   var temp = [];
   
-  if (index == undefined) {
+  if (index === undefined) {
     if (this.debug)
       console.log("Matrix2d->get_column(): column parameter was undefined");
     
@@ -261,8 +383,114 @@ Matrix2d.prototype.get_column = function(index) {
 };
 
 
+/* get_element():
+ *   retrieves the element at row x column
+ */
+Matrix2d.prototype.get_element = function(row, column) {
+  if ((row === undefined) || (column === undefined)) {
+    if (this.debug)
+      console.log("Matrix2d->get_element(): row(" + row.toString() + "), column(" + column.toString() + ")");
+    
+    return false;
+  }
+  
+  if ((row < 0) || (row > (this.num_rows - 1)) || (column < 0) || (column > this.num_columns - 1)) {
+    if (this.debug)
+      console.log("Matrix2d->get_element(): index out of range; expected ((0 - " + (this.num_rows - 1).toString() + "), (0 - " + (this.num_columns - 1).toString() + ") -- received (" + row.toString() + ", " + column.toString() + ")");
+    
+    return false;
+  }
+  
+  return this.matrix[(row * this.num_columns) + column];
+};
+
+
+/* add():
+ *   adds this matrix with the input
+ */
+Matrix2d.prototype.add = function(right, assign) {
+  var matrix = [];
+  var i, j, temp;
+  
+  if (!(right instanceof Matrix2d)) {
+    if (this.debug)
+      console.log("Matrix2d->add(): right operand [input] is not a Matrix2d instance");
+    
+    return false;
+  }
+  
+  if ((this.num_rows != right.num_rows) || (this.num_columns != right.num_columns)) {
+    if (this.debug)
+      console.log("Matrix2d->add(): size mismatch; left operand [this] (" + this.num_rows.toString() + ", " + this.num_columns.toString() + ") -- right operand [input] (" + right.num_rows.toString() + ", " + right.num_columns.toString() + ")");
+    
+    return false;
+  }
+  
+  for (i = 0; i < this.num_rows; i++)
+    for (j = 0; j < this.num_columns; j++)
+      matrix[(i * this.num_columns) + j] = this.matrix[(i * this.num_columns) + j] + right.matrix[(i * this.num_columns) + j];
+  
+  if (assign === undefined)
+    assign = true; /* if unknown, default action is to assign */
+  
+  if (assign) {
+    this.matrix = temp;
+  } else {
+    temp = new Matrix2d(this.num_columns, this.num_rows, this.debug);
+    temp.update(matrix);
+    
+    return temp;
+  }
+  
+  return true;
+};
+
+
+/* scalar_add():
+ *   adds scalar to each element
+ */
+Matrix2d.prototype.scalar_add = function(scalar) {
+  var i, j;
+  
+  if (typeof scalar !== "number") {
+    if (this.debug)
+      console.log("Matrix2d->scalar_add(): input scalar is not a number");
+    
+    return false;
+  }
+  
+  for (i = 0; i < this.num_rows; i++)
+    for (j = 0; j < this.num_columns; j++)
+      this.matrix[(i * this.num_columns) + j] += scalar;
+  
+  return true;
+};
+
+
+/* scalar_multiply():
+ *   multiplies each element by the scalar
+ */
+Matrix2d.prototype.scalar_multiply = function(scalar) {
+  var i, j;
+  
+  if (typeof scalar !== "number") {
+    if (this.debug)
+      console.log("Matrix2d->scalar_multiply(): input scalar is not a number");
+    
+    return false;
+  }
+  
+  for (i = 0; i < this.num_rows; i++)
+    for (j = 0; j < this.num_columns; j++)
+      this.matrix[(i * this.num_columns) + j] *= scalar;
+  
+  return true;
+};
+
+
 /* cw():
  *   rotates the matrix clockwise by 90 degrees
+ *   
  *   assign is a boolean determining whether the result is assigned to this
  *   matrix or the result is returned
  */
@@ -273,6 +501,9 @@ Matrix2d.prototype.cw = function(assign) {
   for (i = 0; i < this.num_columns; i++)
     for (row = this.num_rows - 1, j = (i + (row * this.num_columns)); j >= 0; j -= this.num_columns, row--)
       matrix.push(this.matrix[j]);
+  
+  if (assign === undefined)
+    assign = true; /* if not specified, default action for rotation is to assign the result */
   
   if (assign) {
     this.matrix = matrix;
@@ -291,6 +522,12 @@ Matrix2d.prototype.cw = function(assign) {
 };
 
 
+/* ccw():
+ *   rotates the matrix counter-clockwise by 90 degrees
+ *   
+ *   assign is a boolean determining whether the result is assigned to this
+ *   matrix or the result is returned
+ */
 Matrix2d.prototype.ccw = function(assign) {
   var matrix = [];
   var i, j, row, temp;
@@ -298,6 +535,9 @@ Matrix2d.prototype.ccw = function(assign) {
   for (i = this.num_columns - 1; i >= 0; i--)
     for (row = 0, j = (i + (row * this.num_columns)); row < this.num_rows; j += this.num_columns, row++)
       matrix.push(this.matrix[j]);
+  
+  if (assign === undefined)
+    assign = true; /* if not specified, default action for rotation is to assign the result */
   
   if (assign) {
     this.matrix = matrix;
@@ -318,11 +558,12 @@ Matrix2d.prototype.ccw = function(assign) {
 
 /* rotate():
  *   wrapper function for using cw and ccw
+ *   
  *   see cw() or ccw() for assign
  */
 Matrix2d.prototype.rotate = function(direction, assign) {
-  if (assign !== false)
-    assign = true; /* if not specified, default action is to assign the result to this matrix */
+  if (assign === undefined)
+    assign = true; /* if not specified, default action for rotation is to assign the result */
   
   if ((direction == "cw") || (direction == 0)) {
     return this.cw(assign);
