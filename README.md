@@ -89,6 +89,25 @@ matrix, at which point I'll write it.
 ### Mathematical Operations:
 - add((`Matrix2d`) `right`)  
 - subtract((`Matrix2d`) `right`)  
+- multiply((`Matrix2d`) `right`)
+- product((`Matrix2d`) `right`) -- alias to multiply
+- divide((`Matrix2d`) `right`)
+  
+- scalar_add((`number`) `scalar`)
+- scalar_subtract((`number`) `scalar`)
+- scalar_multiply((`number`) `scalar`)
+- scalar_product((`number`) `scalar`) -- alias to scalar_multiply
+- scalar_divide((`number`) `scalar`)
+  
+  
+### Search Operations:
+- contains(`value`)  
+- row_contains(`index`, `value`)  
+- column_contains(`index`, `value`)  
+  
+- find(`value`)
+- row_find(`index`, `value`)
+- column_find(`index`, `value`)
   
   
 ### Utility:
@@ -98,3 +117,10 @@ matrix, at which point I'll write it.
   
 - clone(`void`)  
   Returns a new Matrix2d instance with this matrix's values.  
+  
+  
+- toString(void)
+  Returns a string representing the matrix.  
+  
+  - I hate camel case with a passion, but I kept this consistent with JavaScript's
+    toString().  
