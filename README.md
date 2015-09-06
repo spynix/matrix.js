@@ -1,4 +1,5 @@
 # matrix.js
+===========
 
 Matrix is a series of matrix classes designed to aid in the normal usage of
 matrices.
