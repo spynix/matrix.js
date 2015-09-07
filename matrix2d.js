@@ -618,6 +618,22 @@ Matrix2d.prototype.scalar_multiply = function(scalar) {
 };
 
 
+/* product():
+ *   alias to multiply()
+ */
+Matrix2d.prototype.product = function(right, assign) {
+  return this.multiply(right, assign);
+};
+
+
+/* scalar_product():
+ *   alias to scalar_multiply()
+ */
+Matrix2d.prototype.scalar_product = function(scalar) {
+  return this.scalar_multiply(scalar);
+};
+
+
 /* scalar_divide():
  *   divide each element by scalar
  */
