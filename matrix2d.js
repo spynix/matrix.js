@@ -466,7 +466,7 @@ Matrix2d.prototype.add = function(right, assign) {
   
   if ((this.num_rows != right.num_rows) || (this.num_columns != right.num_columns)) {
     if (this.debug)
-      console.log("Matrix2d->add(): size mismatch; left operand [this] (" + this.num_rows.toString() + ", " + this.num_columns.toString() + ") -- right operand [input] (" + right.num_rows.toString() + ", " + right.num_columns.toString() + ")");
+      console.log("Matrix2d->add(): size mismatch (expected identically sized matrices); left operand [this] (" + this.num_rows.toString() + ", " + this.num_columns.toString() + ") -- right operand [input] (" + right.num_rows.toString() + ", " + right.num_columns.toString() + ")");
     
     return false;
   }
@@ -528,7 +528,7 @@ Matrix2d.prototype.subtract = function(right, assign) {
   
   if ((this.num_rows != right.num_rows) || (this.num_columns != right.num_columns)) {
     if (this.debug)
-      console.log("Matrix2d->subtract(): size mismatch; left operand [this] (" + this.num_rows.toString() + ", " + this.num_columns.toString() + ") -- right operand [input] (" + right.num_rows.toString() + ", " + right.num_columns.toString() + ")");
+      console.log("Matrix2d->subtract(): size mismatch (expected identically sized matrices); left operand [this] (" + this.num_rows.toString() + ", " + this.num_columns.toString() + ") -- right operand [input] (" + right.num_rows.toString() + ", " + right.num_columns.toString() + ")");
     
     return false;
   }
@@ -576,11 +576,17 @@ Matrix2d.prototype.scalar_subtract = function(scalar) {
 
 /* multiply():
  *   multiplies two matrices
+ *   
+ *   A(m, n) * B(n, p) = C(m, p);
+ *   
+ *   since multiplication can actually change the dimensions of the matrix i'm
+ *   wondering if i shouldn't make the math operations (or perhaps multiply,
+ *   which would include division) not assign by default
  */
 Matrix2d.prototype.multiply = function(right, assign) {
   var matrix = [];
-  var i, j, temp;
-  
+  var total = 0;
+  var i, j, k, l, temp;
   if (!(right instanceof Matrix2d)) {
     if (this.debug)
       console.log("Matrix2d->multiply(): right operand [input] is not a Matrix2d instance");
@@ -588,12 +594,40 @@ Matrix2d.prototype.multiply = function(right, assign) {
     return false;
   }
   
+  /* left operand columns must equal right operand's rows */
   if (this.num_columns != right.num_rows) {
     if (this.debug)
-      console.log("Matrix2d->multiply(): size mismatch; left operand [this] (" + this.num_rows.toString() + ", " + this.num_columns.toString() + ") -- right operand [input] (" + right.num_rows.toString() + ", " + right.num_columns.toString() + ")");
+      console.log("Matrix2d->multiply(): size mismatch (left columns do not match right rows) -- left operand [this] (" + this.num_rows.toString() + ", " + this.num_columns.toString() + ") -- right operand [input] (" + right.num_rows.toString() + ", " + right.num_columns.toString() + ")");
     
     return false;
   }
+  
+  for (i = 0; i < this.num_rows; i++) {
+    for (j = 0; j < right.num_columns; j++) {
+      total = 0;
+      
+      for (k = 0, l = right.num_rows, m = j; k < l; k++, m += right.num_columns)
+        total += this.matrix[(i * this.num_columns) + k] * right.matrix[m];
+      
+      matrix.push(total);
+    }
+  }
+  
+  if (assign === undefined)
+    assign = true;
+  
+  if (assign) {
+    this.matrix = matrix;
+    this.columns = right.columns;
+  } else {
+    temp = new Matrix2d(this.num_rows, right.num_columns, this.debug);
+    
+    temp.update(matrix);
+    
+    return temp;
+  }
+  
+  return true;
 };
 
 
@@ -621,16 +655,19 @@ Matrix2d.prototype.scalar_multiply = function(scalar) {
 /* product():
  *   alias to multiply()
  */
-Matrix2d.prototype.product = function(right, assign) {
-  return this.multiply(right, assign);
-};
+Matrix2d.prototype.product = Matrix2d.prototype.multiply;
 
 
 /* scalar_product():
  *   alias to scalar_multiply()
  */
-Matrix2d.prototype.scalar_product = function(scalar) {
-  return this.scalar_multiply(scalar);
+Matrix2d.prototype.scalar_product = Matrix2d.prototype.scalar_multiply;
+
+/* divide():
+ *   divide left by the right
+ * 
+ */
+Matrix2d.prototype.divide = function(right, assign) {
 };
 
 
@@ -742,6 +779,51 @@ Matrix2d.prototype.rotate = function(direction, assign) {
     console.log("Matrix2d->rotate(): possible rotation directions are (\"cw\", \"ccw\", 0, and 1) -- (received " + direction.toString() + ")");
   
   return false;
+};
+
+
+/* invert():
+ *   inverts the current matrix if possible
+ */
+Matrix2d.prototype.invert = function() {
+  if (this.num_rows != this.num_columns) {
+    if (this.debug)
+      console.log("Matrix2d->invert(): matrix not square, unable to invert");
+    
+    return false;
+  }
+};
+
+
+/* transpose():
+ *   transposes the current matrix
+ */
+Matrix2d.prototype.transpose = function(assign) {
+  var i, j, temp;
+  var matrix = [];
+  
+  for (i = 0; i < this.num_columns; i++)
+    for (j = 0; j < this.num_rows; j++)
+      matrix.push(this.matrix[i + (j * this.num_columns)]);
+  
+  if (assign === undefined)
+    assign = true;
+  
+  if (assign) {
+    temp = this.num_rows;
+    this.num_rows = this.num_columns;
+    this.num_columns = temp;
+    
+    this.matrix = matrix;
+  } else {
+    temp = new Matrix2d(this.num_columns, this.num_rows, this.debug);
+    
+    temp.update(matrix);
+    
+    return temp;
+  }
+  
+  return true;
 };
 
 
@@ -992,12 +1074,23 @@ Matrix2d.prototype.column_find = function(index, value) {
  *   returns a string representing the current matrix
  */
 Matrix2d.prototype.toString = function() {
-  var i, j;
   var buf = "";
+  var str = "";
+  var largest = 0;
+  var temp = 0;
+  var i, j;
+  
+  for (i = 0; i < this.num_rows; i++)
+    for (j = 0; j < this.num_columns; j++)
+      if ((temp = this.matrix[(i * this.num_columns) + j].toString().length) > largest)
+        largest = temp;
+      
   
   for (i = 0; i < this.num_rows; i++) {
-    for (j = 0; j < this.num_columns; j++)
-      buf += (j == 0 ? "" : " ") + this.matrix[(i * this.num_columns) + j].toString();
+    for (j = 0; j < this.num_columns; j++) {
+      str = this.matrix[(i * this.num_columns) + j].toString();
+      buf += (j == 0 ? "" : " ") + Array(largest + 1 - str.length).join(" ") + str;
+    }
     
     buf += "\r\n";
   }
