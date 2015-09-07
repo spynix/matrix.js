@@ -117,7 +117,7 @@ matrix, at which point I'll write it.
   Returns a new Matrix2d instance with this matrix's values.  
   
   
-- toString(void)  
+- toString(`void`)  
   Returns a string representing the matrix.  
   
   - I hate camel case with a passion, but I kept this consistent with JavaScript's
