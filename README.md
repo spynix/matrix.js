@@ -108,6 +108,14 @@ matrix, at which point I'll write it.
 - column_find(`index`, `value`)  
   
   
+### Matrix Specific:
+- cw(`assign`)
+- ccw(`assign`)
+- rotate(`direction`, `assign`) -- wrapper for cw and ccw
+- invert(`void`)
+- transpose(`void`)
+  
+  
 ### Utility:
 - copy((`Matrix2d`) `source`)  
   Assigns this matrix the values of the source matrix.  
