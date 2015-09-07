@@ -6,25 +6,39 @@
     </style>
     <script src="matrix2d.js" type="text/javascript"></script>
     <script>
-      var m = new Matrix2d(3, 3, true);
+      var m  = new Matrix2d(3, 3, true);
       var m2 = new Matrix2d(4, 2, true);
+      var m3 = new Matrix2d(2, 3, true);
+      var m4 = new Matrix2d(3, 2, true);
       
       m.update([[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
       m2.update([1, 2, 3, 4, 5, 6, 7, 8]);
       
-      console.log("m:");
-      m.toString();
+      m3.update([1, 2, 3, 4, 5, 6]);
+      m4.update([7, 8, 9, 10, 11, 12]);
       
-      console.log(m.get_column(1));
-      m.set_column(1, [99, 99, 99]);
-      m.toString();
+      m3.toString();
+      m4.toString();
       
-      console.log(m.get_row(1));
-      m.set_row(1, [88, 88, 88]);
-      m.toString();
+      m3.multiply(m4, false).toString();
       
-      console.log("m2:");
-      m2.toString();
+//      m.product(m2, false);
+//      m.scalar_product(5);
+//      m.toString();
+      
+//      console.log("m:");
+//      m.toString();
+//      
+//      console.log(m.get_column(1));
+//      m.set_column(1, [99, 99, 99]);
+//      m.toString();
+//      
+//      console.log(m.get_row(1));
+//      m.set_row(1, [88, 88, 88]);
+//      m.toString();
+//      
+//      console.log("m2:");
+//      m2.toString();
 //      console.log(m.get());
 //      console.log(m.get(2));
 //      
@@ -43,8 +57,8 @@
 //      m.ccw(false).toString();
 //      console.log(m.ccw(false).toString());
 
-      m2.cw(false).toString();
-      m2.ccw(false).toString();
+//      m2.cw(false).toString();
+//      m2.ccw(false).toString();
     </script>
   </head>
   <body>
