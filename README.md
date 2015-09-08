@@ -91,7 +91,7 @@ matrix, at which point I'll write it.
 - subtract((`Matrix2d`) `right`)  
 - multiply((`Matrix2d`) `right`)
 - product((`Matrix2d`) `right`) -- alias to multiply
-- divide((`Matrix2d`) `right`)
+- divide((`Matrix2d`) `right`) -- currently not implemented
 - scalar_add((`number`) `scalar`)
 - scalar_subtract((`number`) `scalar`)
 - scalar_multiply((`number`) `scalar`)
@@ -112,8 +112,9 @@ matrix, at which point I'll write it.
 - cw(`assign`)
 - ccw(`assign`)
 - rotate(`direction`, `assign`) -- wrapper for cw and ccw
-- invert(`void`)
+- invert(`void`) -- currently not implemented
 - transpose(`void`)
+- minimize(`void`)
   
   
 ### Utility:
