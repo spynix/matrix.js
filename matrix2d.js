@@ -947,7 +947,7 @@ Matrix2d.prototype.find = function(value, dimension) {
     for (j = 0; j < this.num_columns; j++) {
       if (this.matrix[(i * this.num_columns) + j] == value) {
         if (dimension == 1)
-          pairs.push([(i * this.num_columns), j]);
+          pairs.push((i * this.num_columns) + j);
         else if (dimension == 2)
           pairs.push([i, j]);
         else {
