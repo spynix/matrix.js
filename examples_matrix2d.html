@@ -10,18 +10,43 @@
       var m2 = new Matrix2d(4, 2, true);
       var m3 = new Matrix2d(2, 3, true);
       var m4 = new Matrix2d(3, 2, true);
+      var m5;
+      var m6 = new Matrix2d(6, 6, true);
+      var result;
       
-      m.update([[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
-      m2.update([1, 2, 3, 4, 5, 6, 7, 8]);
+      var m6x6 = [
+        0, 0, 3, 0, 0, 0,
+        0, 3, 4, 5, 6, 0,
+        0, 4, 5, 6, 7, 0,
+        0, 5, 6, 7, 8, 0,
+        0, 6, 7, 8, 9, 0,
+        0, 0, 0, 0, 0, 0
+      ];
       
-      m3.update([1, 2, 3, 4, 5, 6]);
-      m4.update([7, 8, 9, 10, 11, 12]);
+      m6.update(m6x6);
+      m6.toString();
       
-      m3.toString();
-      m4.toString();
+      result = m6.minimize();
+      console.log(result);
       
-      m3.multiply(m4, false).toString();
+      m6.toString();
       
+//      m.update([[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+//      m2.update([1, 2, 3, 4, 5, 6, 7, 8]);
+//      
+//      m3.update([1, 2, 3, 4, 5, 6]);
+//      m4.update([7, 8, 9, 10, 11, 12]);
+//      
+//      m3.toString();
+//      m4.toString();
+//      
+//      m3.multiply(m4, false).toString();
+//      m5 = m4.multiply(m3, false);
+//      
+//      m5.toString();
+//      m5.transpose();
+//      m5.toString();
+//      
 //      m.product(m2, false);
 //      m.scalar_product(5);
 //      m.toString();
