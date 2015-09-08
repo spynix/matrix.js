@@ -827,35 +827,6 @@ Matrix2d.prototype.transpose = function(assign) {
 };
 
 
-/* copy():
- *   sets this matrix's data to the source's values
- */
-Matrix2d.prototype.copy = function(source) {
-  if (!(source instanceof Matrix2d)) {
-    if (this.debug)
-      console.log("Matrix2d->copy(): source material not a Matrix2d instance");
-    
-    return false;
-  }
-  
-  this.num_rows = source.num_rows;
-  this.num_columns = source.num_columns;
-  this.matrix = source.matrix;
-};
-
-
-/* clone():
- *   creates and returns a new Matrix2d with this matrix's values
- */
-Matrix2d.prototype.clone = function() {
-  var clone = new Matrix2d(this.num_rows, this.num_columns);
-  
-  clone.update(this.matrix);
-  
-  return clone;
-};
-
-
 /* contains():
  *   determines if the matrix contains a particular value
  *   
@@ -1067,6 +1038,95 @@ Matrix2d.prototype.column_find = function(index, value) {
     return indices;
   
   return false;
+};
+
+
+/* minimize():
+ *   removes matrix padding.  meaning any edge row or column that has nothing
+ *   but a 0 will be removed.  this will continue up to a non-zero row, meaning
+ *   you're returned with a matrix, potentially of a new size, which does not
+ *   have a single row or column on the matrix's EDGE that doesn't have a value
+ *   
+ *   this matrix:          becomes:
+ *     [                     [
+ *       0, 0, 0, 0, 0,        1, 0, 2, 0,
+ *       1, 0, 2, 0, 0,        0, 0, 0, 1,
+ *       0, 0, 0, 1, 0,        0,-2, 0, 1,
+ *       0,-2, 0, 1, 0,        2, 0, 2, 0
+ *       2, 0, 2, 0, 0       ]
+ *     ]
+ */
+Matrix2d.prototype.minimize = function() {
+  var matrix = [];
+  var result = {};
+  var top, right, bottom, left, i, j;
+  
+  top = this.num_rows;
+  bottom = 0;
+  left = this.num_columns;
+  right = 0;
+  
+  for (i = 0; i < this.num_rows; i++) {
+    for (j = 0; j < this.num_columns; j++) {
+      if (this.matrix[(i * this.num_columns) + j] != 0) {
+        if (i < top)
+          top = i;
+        
+        if (i > bottom)
+          bottom = i;
+        
+        if (j < left)
+          left = j;
+        
+        if (j > right)
+          right = j;
+      }
+    }
+  }
+  
+  for (i = top; i <= bottom; i++)
+    for (j = left; j <= right; j++)
+      matrix.push(this.matrix[(i * this.num_columns) + j]);
+  
+  result.top = top;
+  result.bottom = (this.num_rows - bottom) - 1;
+  result.left = left;
+  result.right = (this.num_columns - right) - 1;
+  
+  this.matrix = matrix;
+  this.num_rows = (bottom - top) + 1;
+  this.num_columns = (right - left) + 1;
+
+  return result;
+};
+
+
+/* copy():
+ *   sets this matrix's data to the source's values
+ */
+Matrix2d.prototype.copy = function(source) {
+  if (!(source instanceof Matrix2d)) {
+    if (this.debug)
+      console.log("Matrix2d->copy(): source material not a Matrix2d instance");
+    
+    return false;
+  }
+  
+  this.num_rows = source.num_rows;
+  this.num_columns = source.num_columns;
+  this.matrix = source.matrix;
+};
+
+
+/* clone():
+ *   creates and returns a new Matrix2d with this matrix's values
+ */
+Matrix2d.prototype.clone = function() {
+  var clone = new Matrix2d(this.num_rows, this.num_columns);
+  
+  clone.update(this.matrix);
+  
+  return clone;
 };
 
 
